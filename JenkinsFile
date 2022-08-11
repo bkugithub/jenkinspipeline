@@ -1,0 +1,35 @@
+pipeline {
+    agent any
+    tools{
+        maven 'mavenInUse'
+    }
+    stages{
+        stage('Build Maven'){
+            steps{
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/bkugithub/jenkinspipeline']]])
+                sh 'mvn clean install'
+            }
+        }
+     stage('Build docker image'){
+            steps{
+                script{
+                    sh 'docker build -t bkugithub/jenkinspipeline .'
+                }
+            }
+        }
+     stage('Push image to Hub'){
+            steps{
+                script{
+                  withCredentials([string(credentialsId: 'dockerhubpasswordId', variable: 'dockerhubpassword')]){
+                   sh 'docker login -u bilgekaan -p ${dockerhubpassword}'
+
+}
+                   sh 'docker push bilgekaan/jenkinspipeline:fpush'
+                }
+            }
+        }
+
+
+
+    }
+}
